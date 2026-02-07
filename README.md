@@ -72,10 +72,8 @@ pip install -r requirements.txt
 ### 5. Run the Project
 
 ```bash
-python main.py
+python main_2.py
 ```
-
-(Replace `main.py` with your actual entry file.)
 
 ---
 
@@ -84,22 +82,3 @@ python main.py
 ```bash
 deactivate
 ```
-
----
-
-## Project Structure (Example)
-
-```
-qlink-irc/
-├── venv/
-├── requirements.txt
-├── main.py
-├── README.md
-```
-
----
-
-## Notes
-
-* Always activate the virtual environment before running the project.
-* Do **not** commit the `venv/` folder to Git.
