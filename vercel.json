@@ -1,8 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "app.py": {
+    "api/index.py": {
       "maxDuration": 300,
+      "includeFiles": "{api_server.py,main.py,main_2.py,requirements.txt}",
       "excludeFiles": "{uploads/**,Qlink/**,venv/**,.venv/**,__pycache__/**}"
     }
   }
