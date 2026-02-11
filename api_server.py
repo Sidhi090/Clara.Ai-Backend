@@ -322,9 +322,22 @@ def reconcile(
 if __name__ == "__main__":
     import uvicorn
 
+    # Render (and many other platforms) provide the assigned port via `PORT`.
+    # If it's present, bind to 0.0.0.0:<PORT> so the platform health/port scan succeeds.
+    render_port = os.environ.get("PORT")
+
+    if render_port:
+        default_host = "0.0.0.0"
+        port = int(render_port)
+        default_reload = "0"
+    else:
+        default_host = "127.0.0.1"
+        port = int(os.environ.get("QLINK_PORT", "8000"))
+        default_reload = "1"
+
     uvicorn.run(
         "api_server:app",
-        host=os.environ.get("QLINK_HOST", "127.0.0.1"),
-        port=int(os.environ.get("QLINK_PORT", "8000")),
-        reload=os.environ.get("QLINK_RELOAD", "1") == "1",
+        host=os.environ.get("QLINK_HOST", default_host),
+        port=port,
+        reload=os.environ.get("QLINK_RELOAD", default_reload) == "1",
     )
