@@ -77,6 +77,47 @@ python main_2.py
 
 ---
 
+## Web App (Frontend + Backend)
+
+### Backend (API)
+
+Install deps:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the API:
+
+```bash
+python api_server.py
+```
+
+The API runs on `http://127.0.0.1:8000` and exposes:
+
+- `POST /api/reconcile` (multipart form-data) → returns the generated CSV download
+- `GET /api/health`
+- `GET /api/history` → lists stored files grouped by month
+- `GET /api/download/{month}/{filename}` → secure file download
+
+### Frontend (Vite)
+
+Create `Qlink/.env.local` (or copy from `Qlink/.env.example`) with:
+
+```bash
+VITE_API_BASE=http://127.0.0.1:8000
+```
+
+```bash
+cd Qlink
+npm install
+npm run dev
+```
+
+Open the URL shown by Vite (usually `http://localhost:5173`), upload the files, then click **Run reconciliation**.
+
+---
+
 ## Deactivate Virtual Environment
 
 ```bash

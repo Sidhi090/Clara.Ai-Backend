@@ -1,5 +1,6 @@
 import pandas as pd
 from pathlib import Path
+import os
 import numpy as np
 from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -8,19 +9,33 @@ from openpyxl.utils import get_column_letter
 # =========================================================
 # CONFIG
 # =========================================================
-BASE_DIR = Path("IRC")
+def _env_path(var_name: str, default):
+    value = os.environ.get(var_name)
+    if value:
+        return Path(value)
+    return default
 
-ERP_FILE = BASE_DIR / "erp data.xlsx"
-TALLY_FILE = BASE_DIR / "tally dump till date for reco 31.10.2025 (2).xlsx"
+
+def _read_input_file(path, **kwargs):
+    path = Path(path)
+    if path.suffix.lower() == ".csv":
+        return pd.read_csv(path, **kwargs)
+    return pd.read_excel(path, **kwargs)
+
+
+BASE_DIR = Path(os.environ.get("QLINK_BASE_DIR", "IRC"))
+
+ERP_FILE = _env_path("QLINK_ERP_FILE", BASE_DIR / "erp data.xlsx")
+TALLY_FILE = _env_path("QLINK_TALLY_FILE", BASE_DIR / "tally dump till date for reco 31.10.2025 (2).xlsx")
 
 GST_FILES = {
-    "0.5": BASE_DIR / "05_ CGST (1).xls",
-    "2.5": BASE_DIR / "2.5_ CGST (1).xls",
-    "9": BASE_DIR / "9_ CGST (1).xls",
-    "6": None  # provision for future
+    "0.5": _env_path("QLINK_GST_05_FILE", BASE_DIR / "05_ CGST (1).xls"),
+    "2.5": _env_path("QLINK_GST_25_FILE", BASE_DIR / "2.5_ CGST (1).xls"),
+    "9": _env_path("QLINK_GST_9_FILE", BASE_DIR / "9_ CGST (1).xls"),
+    "6": _env_path("QLINK_GST_6_FILE", None)  # provision for future
 }
 
-REG_AGREEMENT_FILE = BASE_DIR / "registered agreement data.xls"
+REG_AGREEMENT_FILE = _env_path("QLINK_REG_AGREEMENT_FILE", BASE_DIR / "registered agreement data.xls")
 
 # =========================================================
 # STEP 0 – LOAD ERP DATA & CREATE UNIQUE IDENTIFIER
@@ -29,7 +44,7 @@ print("="*70)
 print("STEP 0: Loading ERP Data & Creating Unique Identifiers")
 print("="*70)
 
-raw_df = pd.read_excel(ERP_FILE, header=None)
+raw_df = _read_input_file(ERP_FILE, header=None)
 
 # Normalize all cells to string for safe scanning
 raw_df = raw_df.applymap(lambda x: str(x).strip() if pd.notna(x) else "")
@@ -89,7 +104,7 @@ if header_row_index is None:
 # STEP 4: Load ERP using detected header
 # ------------------------------------------------------
 print("\n[STEP 4] Reloading Excel using detected header row...")
-erp_df = pd.read_excel(ERP_FILE, header=header_row_index)
+erp_df = _read_input_file(ERP_FILE, header=header_row_index)
 
 print(f"ERP DataFrame shape: {erp_df.shape}")
 print("Detected column names:")
@@ -173,7 +188,7 @@ print("="*70)
 
 print("\n[STEP 1] Loading entire Tally sheet without header...")
 
-raw_df = pd.read_excel(TALLY_FILE, header=None)
+raw_df = _read_input_file(TALLY_FILE, header=None)
 raw_df = raw_df.applymap(lambda x: str(x).strip() if pd.notna(x) else "")
 
 print(f"Loaded raw sheet with shape: {raw_df.shape}")
@@ -256,7 +271,7 @@ if header_row_index is None:
 # ------------------------------------------------------
 print("\n[STEP 4] Reloading Excel using detected header...")
 
-tally_df = pd.read_excel(
+tally_df = _read_input_file(
     TALLY_FILE,
     header=header_row_index
 )
@@ -524,7 +539,7 @@ def calculate_credit_minus_debit(file_path, label, valid_ids):
     print(f"\n📂 Processing {label}")
     print(f"  Valid UniqueIDs count: {len(valid_ids)}")
 
-    df = pd.read_excel(file_path, header=None)
+    df = _read_input_file(file_path, header=None)
 
     # Detect header
     header_idx, cols = detect_header_and_columns(df)
@@ -603,6 +618,7 @@ for rate, file_path in GST_FILES.items():
     gst_diff = calculate_credit_minus_debit(
         file_path,
         f"{rate}% CGST",
+        common_customers,
     )
     gst_total += gst_diff
 
@@ -618,6 +634,7 @@ print("\nProcessing Registered Agreement:")
 registered_agreement_diff = calculate_credit_minus_debit(
     REG_AGREEMENT_FILE,
     "Registered Agreement",
+    common_customers,
 )
 
 # -------------------------------
@@ -814,7 +831,7 @@ final_output = final_output[[
 ]]
 
 # Save CSV
-output_file_path = BASE_DIR / "reconcilied_output.csv"
+output_file_path = _env_path("QLINK_OUTPUT_CSV", BASE_DIR / "reconcilied_output.csv")
 final_output.to_csv(output_file_path, index=False)
 
 print(f"\n✅ Final reconciled CSV saved to: {output_file_path}")
