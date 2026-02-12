@@ -100,6 +100,12 @@ The API runs on `http://127.0.0.1:8000` and exposes:
 - `GET /api/history` → lists stored files grouped by month
 - `GET /api/download/{month}/{filename}` → secure file download
 
+If your frontend is hosted (e.g. on Vercel), make sure the backend CORS allowlist includes it:
+
+```bash
+QLINK_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,https://clara-frontend-sigma.vercel.app
+```
+
 ### Frontend (Vite)
 
 Create `Qlink/.env.local` (or copy from `Qlink/.env.example`) with:
